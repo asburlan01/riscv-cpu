@@ -7,7 +7,7 @@ TOPLEVEL = Fetch
 MODULE = fetch_tests
 
 ifeq (${SIM}, verilator)
-	EXTRA_ARGS +=--timing --unroll-count 512
+	EXTRA_ARGS +=--timing --unroll-count 1024
 endif
 
 # include cocotb's make rules to take care of the simulator setup

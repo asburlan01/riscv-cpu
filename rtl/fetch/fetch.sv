@@ -1,14 +1,22 @@
 `include "btb.sv"
-// `include "bpu.sv"
+`include "bpu.sv"
 
 module Fetch #(
     parameter reset_vector = 0
 ) (
     input clk,
     input rst,
+
+    // BTB Updates
     input btb_update_valid,
     input [31:0] btb_update_addr,
     input [31:0] btb_update_target,
+
+    input bpu_update_valid,
+    input [31:0] bpu_update_addr,
+    input bpu_update_taken,
+
+    // Current Program Counter
     output logic [31:0] pc
 );
 
@@ -33,8 +41,22 @@ BTB btb(
     .pred_pc_valid(btb_pred_pc_valid)
 );
 
+logic bpu_prediction;
+
+BPU bpu(
+    .clk(clk),
+    .rst(rst),
+    
+    .query_addr(next_pc),
+    .prediction(bpu_prediction),
+
+    .update_valid(bpu_update_valid),
+    .update_addr(bpu_update_addr),
+    .update_taken(bpu_update_taken)
+);
+
 always_comb begin
-    if (btb_pred_pc_valid)
+    if (btb_pred_pc_valid && bpu_prediction)
         next_pc = btb_pred_pc;
     else
         next_pc = pc + 4;

@@ -53,6 +53,10 @@ async def updates_btb(dut):
     dut.btb_update_valid.value = 1
     dut.btb_update_addr.value  = 16
     dut.btb_update_target.value = 32
+    
+    dut.bpu_update_valid.value = 1
+    dut.bpu_update_addr.value  = 16
+    dut.bpu_update_taken.value = 1
 
     dut.clk.value = 0
     await Timer(half_period, units="ns")
@@ -62,6 +66,7 @@ async def updates_btb(dut):
     dut.clk.value = 0
     await Timer(half_period, units="ns")
     dut.btb_update_valid.value = 0
+    dut.bpu_update_valid.value = 0
     dut.clk.value = 1
     await Timer(half_period, units="ns")
     
