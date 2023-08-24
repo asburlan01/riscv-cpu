@@ -1,5 +1,5 @@
-`include "btb.sv"
-`include "bpu.sv"
+`include "fetch/btb.sv"
+`include "fetch/bpu.sv"
 
 module Fetch #(
     parameter reset_vector = 0

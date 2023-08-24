@@ -1,14 +1,18 @@
-
-TEST_DIRS := toplev fetch
+TEST_DIRS := \
+	toplev \
+	fetch/fetch \
+	fetch/btb \
+	fetch/bpu
 
 SIM ?= icarus
+PROJ_ROOT := $(shell dirname $(PWD)) 
 
 .PHONY: all
-all: $(TEST_DIRS)
+all: $(TEST_DIRS) 
 
 .PHONY: $(TEST_DIRS)
 $(TEST_DIRS):
-	@cd $@ && $(MAKE) SIM=${SIM}
+	@cd $@ && $(MAKE) SIM=${SIM} PROJ_ROOT=${PROJ_ROOT}
 
 .PHONY: clean
 clean:

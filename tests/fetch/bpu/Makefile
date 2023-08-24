@@ -1,10 +1,10 @@
 SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
-VERILOG_SOURCES += ../../rtl/fetch/fetch.sv
-VERILOG_INCLUDE_DIRS = ../../rtl ../../rtl/fetch
-TOPLEVEL = Fetch
-MODULE = fetch_tests
+VERILOG_SOURCES += ${PROJ_ROOT}/rtl/fetch/bpu.sv
+VERILOG_INCLUDE_DIRS = ${PROJ_ROOT}/rtl
+TOPLEVEL = BPU
+MODULE = bpu_tests
 
 ifeq (${SIM}, verilator)
 	EXTRA_ARGS +=--timing --unroll-count 1024
