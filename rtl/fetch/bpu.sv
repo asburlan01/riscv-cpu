@@ -5,8 +5,9 @@ module BPU #(
     input clk,
     input rst,
 
-    input [31:0] query_addr, 
-    output logic prediction,
+    input [31:0] query_addr,
+    output prediction_valid,
+    output prediction,
 
     input update_valid,
     input [31:0] update_addr,
@@ -18,11 +19,12 @@ module BPU #(
 logic valid[0:(1 << bpu_size) - 1];
 logic [counter_size-1:0] sat_counters[0 : (1 << bpu_size) - 1];
 
+logic [31:0] query_addr_flop;
 logic [bpu_size-1:0] query_addr_hash;
-assign query_addr_hash = query_addr[bpu_size-1:0];
+assign query_addr_hash = query_addr_flop[bpu_size-1:0];
 
-logic pred;
-assign pred = valid[query_addr_hash] && sat_counters[query_addr_hash][counter_size-1];
+assign prediction_valid = valid[query_addr_hash];
+assign prediction = sat_counters[query_addr_hash][counter_size-1];
 
 logic [bpu_size-1:0] update_addr_hash;
 assign update_addr_hash = update_addr[bpu_size-1:0];
@@ -51,7 +53,7 @@ always_ff @(posedge clk or posedge rst) begin
         end
         prediction <= 1'b0;
     end else begin
-        prediction <= pred;
+        query_addr_flop <= query_addr;
         if (update_valid) begin
             valid[update_addr_hash] <= 1'b1;
             sat_counters[update_addr_hash] <= updated_counter;

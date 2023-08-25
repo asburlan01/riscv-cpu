@@ -16,7 +16,8 @@ module Fetch #(
     input [31:0] branch_update_target,
 
     // Current Program Counter
-    output logic [31:0] pc
+    output logic [31:0] pc,
+    output logic [31:0] next_pc
 );
 
 logic branch_update_valid_flop;
@@ -25,9 +26,6 @@ logic branch_update_mispredicted_flop;
 logic branch_update_unconditional_flop;
 logic [31:0] branch_update_addr_flop;
 logic [31:0] branch_update_target_flop;
-
-// logic [31:0] pc;
-logic [31:0] next_pc;
 
 logic [31:0] btb_pred_pc;
 logic btb_pred_pc_valid;
@@ -54,6 +52,7 @@ BTB btb(
 );
 
 logic bpu_prediction;
+logic bpu_prediction_valid;
 
 logic bpu_update_valid;
 assign bpu_update_valid = 
@@ -65,6 +64,7 @@ BPU bpu(
     .rst(rst),
     
     .query_addr(next_pc),
+    .prediction_valid(bpu_prediction_valid),
     .prediction(bpu_prediction),
 
     .update_valid(bpu_update_valid),
@@ -73,9 +73,9 @@ BPU bpu(
 );
 
 always_comb begin
-    if (branch_update_mispredicted_flop)
+    if (branch_update_valid_flop && branch_update_mispredicted_flop)
         next_pc = branch_update_target;
-    else if (btb_pred_pc_valid && bpu_prediction)
+    else if (btb_pred_pc_valid && (~bpu_prediction_valid || bpu_prediction))
         next_pc = btb_pred_pc;
     else
         next_pc = pc + 4;
