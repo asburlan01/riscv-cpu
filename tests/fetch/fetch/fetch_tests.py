@@ -1,7 +1,7 @@
 import cocotb
 from cocotb.triggers import Timer
 
-half_period = 3
+half_period = 4
 
 async def reset_module(dut):
     dut.rst.value = 0

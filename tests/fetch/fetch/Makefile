@@ -2,7 +2,7 @@ SIM ?= icarus
 TOPLEVEL_LANG ?= verilog
 
 VERILOG_SOURCES += ${PROJ_ROOT}/rtl/fetch/fetch.sv
-VERILOG_INCLUDE_DIRS = ${PROJ_ROOT}/rtl ${PROJ_ROOT}/rtl/fetch
+VERILOG_INCLUDE_DIRS = ${PROJ_ROOT}/rtl
 TOPLEVEL = Fetch
 MODULE = fetch_tests
 

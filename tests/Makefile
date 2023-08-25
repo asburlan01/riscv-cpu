@@ -2,7 +2,10 @@ TEST_DIRS := \
 	toplev \
 	fetch/fetch \
 	fetch/btb \
-	fetch/bpu
+	fetch/bpu \
+	execute/alu \
+	execute/cmp \
+	execute/execute
 
 SIM ?= icarus
 PROJ_ROOT := $(shell dirname $(PWD)) 
