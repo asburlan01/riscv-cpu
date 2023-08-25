@@ -1,12 +1,12 @@
 module CrossBar #(parameter size = 1)(
-    input logic ctrl,
+    input logic sel,
     input [size-1:0] in1,
     input [size-1:0] in2,
     output logic [size-1:0] out1,
     output logic [size-1:0] out2
 );
     always_comb begin
-        if (ctrl)
+        if (sel)
             begin
                 out1 = in2;
                 out2 = in1;
