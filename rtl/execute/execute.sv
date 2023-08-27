@@ -110,16 +110,18 @@ assign wb_rd = rd_flop;
 
 // Flop inputs
 always_ff @(posedge clk or posedge rst) begin
-    pc_flop <= decode_pc;
-    imm_flop <= decode_imm;
-    inst_type_flop <= decode_inst_type;
-    alu_function_flop <= decode_alu_function;
-    cmp_function_flop <= decode_cmp_function;
-    reg1_flop <= decode_reg1;
-    reg2_flop <= decode_reg2;
-    is_linking_branch_flop <= decode_is_linking_branch;
-    pred_next_pc_flop <= decode_pred_next_pc;
-    rd_flop <= decode_rd;
+    if (~rst) begin
+        pc_flop <= decode_pc;
+        imm_flop <= decode_imm;
+        inst_type_flop <= decode_inst_type;
+        alu_function_flop <= decode_alu_function;
+        cmp_function_flop <= decode_cmp_function;
+        reg1_flop <= decode_reg1;
+        reg2_flop <= decode_reg2;
+        is_linking_branch_flop <= decode_is_linking_branch;
+        pred_next_pc_flop <= decode_pred_next_pc;
+        rd_flop <= decode_rd;
+    end
 end
 
 endmodule

@@ -15,12 +15,13 @@ assign signed_op2 = op2;
 
 always_comb begin
     case (cmp_function)
-        EQ:  res = op1 == op2;
-        NE:  res = op1 != op2;
-        LT:  res = signed_op1 < signed_op2;
-        LTU: res = op1 < op2;
-        GE:  res = signed_op1 >= signed_op2;
-        GEU: res = op1 >= op2;
+        CMP_EQ:  res = op1 == op2;
+        CMP_NE:  res = op1 != op2;
+        CMP_LT:  res = signed_op1 < signed_op2;
+        CMP_LTU: res = op1 < op2;
+        CMP_GE:  res = signed_op1 >= signed_op2;
+        CMP_GEU: res = op1 >= op2;
+        CMP_DISABLE: res = 1'b0;
         default: res = 1'b0;
      endcase
 end

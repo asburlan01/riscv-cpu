@@ -51,7 +51,6 @@ always_ff @(posedge clk or posedge rst) begin
         for (int i = 0; i < (1 << bpu_size); i++) begin
             valid[i] <= 1'b0;
         end
-        prediction <= 1'b0;
     end else begin
         query_addr_flop <= query_addr;
         if (update_valid) begin

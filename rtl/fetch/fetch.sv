@@ -2,7 +2,7 @@
 `include "fetch/bpu.sv"
 
 module Fetch #(
-    parameter reset_vector = 0
+    parameter reset_vector = 32'd0
 ) (
     input clk,
     input rst,
