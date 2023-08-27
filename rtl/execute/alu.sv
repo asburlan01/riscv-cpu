@@ -23,7 +23,9 @@ always_comb begin
         ALU_OR:  res = op1 | op2;
         ALU_XOR: res = op1 ^ op2;
         ALU_ADD_SIGN_FLIP: res = {{1'b0}, {sum[30:0]}};
-        ALU_BYPASS_OP2: res = op2;
+        ALU_SLL: res = 32'hdeadbeef; // unsupported yet
+        ALU_SRL: res = 32'hdeadbeef;
+        ALU_SRA: res = 32'hdeadbeef;
         ALU_DISABLE: res = 32'd0;
      endcase
 end

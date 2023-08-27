@@ -19,7 +19,8 @@ module Decode(
     output logic [ 4:0] execute_reg2,
     output logic [ 4:0] execute_rd,
     output logic execute_is_linking_branch,
-    output logic [31:0] execute_pred_next_pc
+    output logic [31:0] execute_pred_next_pc,
+    output e_rf_write_source execute_rf_write_source
 );
 
 logic [31:0] pc_flop;
@@ -55,6 +56,7 @@ always_comb begin
                 execute_reg2 = 5'd0;
                 execute_rd = inst_flop[11:7];
                 execute_is_linking_branch = 1'b0;
+                execute_rf_write_source = SOURCE_ALU;
             end
         7'b0010111: // AUIPC 
             begin
@@ -66,6 +68,7 @@ always_comb begin
                 execute_reg2 = 5'd0;
                 execute_rd = inst_flop[11:7];
                 execute_is_linking_branch = 1'b0;
+                execute_rf_write_source = SOURCE_ALU;
             end
         7'b1101111: // JAL 
             begin
@@ -81,6 +84,7 @@ always_comb begin
                 execute_reg2 = 5'd0;
                 execute_rd = inst_flop[11:7];
                 execute_is_linking_branch = 1'b1;
+                execute_rf_write_source = SOURCE_SEQ_PC;
             end
         7'b1100111: // JALR
             begin
@@ -92,6 +96,7 @@ always_comb begin
                 execute_reg2 = 5'd0;
                 execute_rd = inst_flop[11:7];
                 execute_is_linking_branch = 1'b1;
+                execute_rf_write_source = SOURCE_SEQ_PC;
             end
         7'b1100011: // BEQ, BNE, BLT, BGE, BLTU, BGEU
             begin
@@ -113,6 +118,7 @@ always_comb begin
                 execute_reg2 = inst_flop[24:20];
                 execute_rd = 5'd0;
                 execute_is_linking_branch = 1'b0;
+                execute_rf_write_source = SOURCE_CMP;
             end
         7'b0010011: // ADDI, SLTI, SLTIU, XORI, ORI
             begin
@@ -128,42 +134,57 @@ always_comb begin
                             execute_inst_type = INST_REG_IMM;
                             execute_alu_function = ALU_ADD;
                             execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
+                        end
+                    3'b001: // SLLI
+                        begin
+                            execute_inst_type = INST_REG_IMM;
+                            execute_alu_function = ALU_SLL;
+                            execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
                         end
                     3'b010: // SLTI
                         begin
                             execute_inst_type = INST_PC_REG;
                             execute_alu_function = ALU_DISABLE;
                             execute_cmp_function = CMP_LT;
+                            execute_rf_write_source = SOURCE_CMP;
                         end
                     3'b011: // SLTIU
                         begin
                             execute_inst_type = INST_PC_REG;
                             execute_alu_function = ALU_DISABLE;
                             execute_cmp_function = CMP_LTU;
+                            execute_rf_write_source = SOURCE_CMP;
                         end
                     3'b100: // XORI 
                         begin
                             execute_inst_type = INST_REG_IMM;
                             execute_alu_function = ALU_XOR;
                             execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
+                        end
+                    3'b101: // SRLI, SRAI
+                        begin
+                            execute_inst_type = INST_REG_IMM;
+                            execute_alu_function = inst_flop[30] ?
+                                    ALU_SRA : ALU_SRL; // TODO: check this
+                            execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
                         end
                     3'b110: // ORI 
                         begin
                             execute_inst_type = INST_REG_IMM;
                             execute_alu_function = ALU_OR;
                             execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
                         end
                     3'b111: // ANDI 
                         begin
                             execute_inst_type = INST_REG_IMM;
                             execute_alu_function = ALU_AND;
                             execute_cmp_function = CMP_DISABLE;
-                        end
-                    default:
-                        begin
-                            execute_inst_type = INST_REG_IMM;
-                            execute_alu_function = ALU_DISABLE;
-                            execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_ALU;
                         end
                 endcase
             end
@@ -183,26 +204,49 @@ always_comb begin
                                 begin
                                     execute_alu_function = ALU_ADD;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
                                 end
-                            3'b111: // AND
+                            3'b001: // SLL
                                 begin
-                                    execute_alu_function = ALU_AND;
+                                    execute_alu_function = ALU_SLL;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
                                 end
-                            3'b110: // OR
+                            3'b010: // SLT
                                 begin
-                                    execute_alu_function = ALU_OR;
-                                    execute_cmp_function = CMP_DISABLE;
+                                    execute_alu_function = ALU_DISABLE;
+                                    execute_cmp_function = CMP_LT;
+                                    execute_rf_write_source = SOURCE_CMP;
+                                end
+                            3'b011: // SLTU
+                                begin
+                                    execute_alu_function = ALU_DISABLE;
+                                    execute_cmp_function = CMP_LTU;
+                                    execute_rf_write_source = SOURCE_CMP;
                                 end
                             3'b100: // XOR
                                 begin
                                     execute_alu_function = ALU_XOR;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
                                 end
-                            default:
+                            3'b101: // SRL
                                 begin
-                                    execute_alu_function = ALU_DISABLE;
+                                    execute_alu_function = ALU_SRL;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
+                                end
+                            3'b110: // OR
+                                begin
+                                    execute_alu_function = ALU_OR;
+                                    execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
+                                end
+                            3'b111: // AND
+                                begin
+                                    execute_alu_function = ALU_AND;
+                                    execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
                                 end
                         endcase
                     7'b0100000:
@@ -211,17 +255,26 @@ always_comb begin
                                 begin
                                     execute_alu_function = ALU_SUB;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
+                                end
+                            3'b101: // SRA
+                                begin
+                                    execute_alu_function = ALU_SRA;
+                                    execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_ALU;
                                 end
                             default:
                                 begin
                                     execute_alu_function = ALU_DISABLE;
                                     execute_cmp_function = CMP_DISABLE;
+                                    execute_rf_write_source = SOURCE_CMP;
                                 end
                         endcase
                     default:
                         begin
                             execute_alu_function = ALU_DISABLE;
                             execute_cmp_function = CMP_DISABLE;
+                            execute_rf_write_source = SOURCE_CMP;
                         end
                 endcase 
             end
@@ -235,6 +288,7 @@ always_comb begin
                 execute_reg2 = 5'd0;
                 execute_rd = 5'd0;
                 execute_is_linking_branch = 1'b0;
+                execute_rf_write_source = SOURCE_CMP;
             end
     endcase
 end

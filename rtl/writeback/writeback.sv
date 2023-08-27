@@ -12,6 +12,7 @@ module WriteBack(
     input execute_is_linking_branch,
     input [31:0] execute_pred_next_pc,
     input [ 4:0] execute_rd,
+    input e_rf_write_source execute_rf_write_source,
 
     // To Fetch
     output fetch_branch_update_valid,
@@ -24,7 +25,7 @@ module WriteBack(
     // To RegFile
     output logic rf_write_enable,
     output [ 4:0] rf_write_reg,
-    output [31:0] rf_write_value
+    output logic [31:0] rf_write_value
 );
 
 // Input Flops
@@ -35,63 +36,54 @@ logic [31:0] alu_out_flop;
 logic is_linking_branch_flop;
 logic [31:0] pred_next_pc_flop;
 logic [4:0] rd_flop;
+e_rf_write_source rf_write_source_flop;
 
 // Branch Handling
 logic [31:0] next_pc;
-logic inst_rf_write_enable;
-logic [31:0] inst_rf_write_value;
+logic [31:0] sequential_pc;
 logic is_branch;
 logic is_taken;
 
+assign sequential_pc = pc_flop + 32'd4;
+
 always_comb begin
-    case (inst_type_flop)
-        INST_REG_IMM:
-            if (is_linking_branch_flop) begin // JALR
-                 next_pc = alu_out_flop;
-                 inst_rf_write_enable = 1'b1;
-                 inst_rf_write_value = pc_flop + 32'd4;
-                 is_branch = 1'b1;
-                 is_taken = 1'b1;
-            end else begin                    // REG-IMM 
-                 next_pc = pc_flop + 32'd4;
-                 inst_rf_write_enable = 1'b1;
-                 inst_rf_write_value = alu_out_flop;
-                 is_branch = 1'b0;
-                 is_taken = 1'b0;
-            end
-        INST_PC_IMM:
-            if (is_linking_branch_flop) begin // JAL
-                 next_pc = alu_out_flop;
-                 inst_rf_write_enable = 1'b1;
-                 inst_rf_write_value = pc_flop + 32'd4;
-                 is_branch = 1'b1;
-                 is_taken = 1'b1;
-            end else begin                    // JC
-                 next_pc = cmp_out_flop ? alu_out_flop : pc_flop + 32'd4;
-                 inst_rf_write_enable = 1'b0;
-                 inst_rf_write_value = 32'd0;
-                 is_branch = 1'b1;
-                 is_taken = cmp_out_flop;
-            end
-        default:                              // INST_REG_REG
-            begin
-                 next_pc = pc_flop + 32'd4;
-                 inst_rf_write_enable = 1'b1;
-                 inst_rf_write_value = alu_out_flop;
-                 is_branch = 1'b0;
-                 is_taken = 1'b0;
-            end 
-    endcase
+    if (is_linking_branch_flop) begin // JAL, JALR
+        next_pc = alu_out_flop;
+        is_branch = 1'b1;
+        is_taken = 1'b1;
+    end else if (inst_type_flop == INST_PC_IMM) begin // JC
+        next_pc = cmp_out_flop ? alu_out_flop : sequential_pc;
+        is_branch = 1'b1;
+        is_taken = cmp_out_flop;
+    end else begin // Other instructions
+        next_pc   = sequential_pc;
+        is_branch = 1'b0;
+        is_taken  = 1'b0; 
+    end
 end
+
+logic [31:0] inst_rf_write_value;
 
 logic misprediction_detected;
 assign misprediction_detected = next_pc != pred_next_pc_flop;
 
-// do not write anything if currently squashing
-assign rf_write_enable = ~|squash_cycles && inst_rf_write_enable;
-assign rf_write_reg = rd_flop; 
-assign rf_write_value = inst_rf_write_value; 
+// RegFile writes handling
 
+// do not write anything if currently squashing
+// writes to x0 are ignored
+assign rf_write_enable = ~|squash_cycles && |rd_flop; 
+assign rf_write_reg = rd_flop; 
+
+always_comb
+    case (rf_write_source_flop)
+        SOURCE_ALU:    rf_write_value = alu_out_flop;
+        SOURCE_CMP:    rf_write_value = {{30'd0},{cmp_out_flop}};
+        SOURCE_SEQ_PC: rf_write_value = sequential_pc;
+        SOURCE_MEM:    rf_write_value = 32'hdeadbeef; // Not supported yet
+     endcase
+
+// Fetch branch updates handling
+//
 assign fetch_branch_update_valid = ~|squash_cycles && is_branch;
 assign fetch_branch_update_taken = is_taken;
 assign fetch_branch_update_mispredicted = misprediction_detected;
@@ -125,6 +117,7 @@ always_ff @(posedge clk or posedge rst) begin
             is_linking_branch_flop <= execute_is_linking_branch;
             pred_next_pc_flop <= execute_pred_next_pc;
             rd_flop <= execute_rd;
+            rf_write_source_flop <= execute_rf_write_source;
         end
     end
 end

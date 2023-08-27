@@ -18,6 +18,7 @@ module Execute (
     input decode_is_linking_branch,
     input [31:0] decode_pred_next_pc,
     input [ 4:0] decode_rd,
+    input e_rf_write_source decode_rf_write_source,
 
     // From RegFile
     output logic [ 4:0] rf_reg1,
@@ -32,7 +33,8 @@ module Execute (
     output [31:0] wb_alu_out,
     output wb_is_linking_branch,
     output [31:0] wb_pred_next_pc,
-    output [ 4:0] wb_rd
+    output [ 4:0] wb_rd,
+    output e_rf_write_source wb_rf_write_source
 
     // To MemoryController
     // output mem_read_valid,
@@ -50,6 +52,7 @@ logic [ 4:0] reg2_flop;
 logic is_linking_branch_flop;
 logic [31:0] pred_next_pc_flop;
 logic [ 4:0] rd_flop;
+e_rf_write_source rf_write_source_flop;
 
 /********************* CrossBar 1 *********************/
 
@@ -107,6 +110,7 @@ assign wb_inst_type = inst_type_flop;
 assign wb_is_linking_branch = is_linking_branch_flop;
 assign wb_pred_next_pc = pred_next_pc_flop;
 assign wb_rd = rd_flop;
+assign wb_rf_write_source = rf_write_source_flop;
 
 // Flop inputs
 always_ff @(posedge clk or posedge rst) begin
@@ -121,6 +125,7 @@ always_ff @(posedge clk or posedge rst) begin
         is_linking_branch_flop <= decode_is_linking_branch;
         pred_next_pc_flop <= decode_pred_next_pc;
         rd_flop <= decode_rd;
+        rf_write_source_flop <= decode_rf_write_source;
     end
 end
 
