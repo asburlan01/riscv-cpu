@@ -78,6 +78,7 @@ logic  [ 4:0] decode_reg2;
 logic decode_is_linking_branch;
 logic [31:0] decode_pred_next_pc;
 logic [ 4:0] decode_rd;
+e_rf_write_source decode_rf_write_source;
 
 Decode decode(
     .clk(clk),
@@ -96,7 +97,8 @@ Decode decode(
     .execute_reg2(decode_reg2),
     .execute_is_linking_branch(decode_is_linking_branch),
     .execute_pred_next_pc(decode_pred_next_pc),
-    .execute_rd(decode_rd)
+    .execute_rd(decode_rd),
+    .execute_rf_write_source(decode_rf_write_source)
 );
 
 /******************************************/
@@ -106,10 +108,11 @@ Decode decode(
 logic [31:0] execute_pc;
 e_inst_type execute_inst_type;
 logic execute_cmp_out;
-logic [31:0]execute_alu_out;
+logic [31:0] execute_alu_out;
 logic execute_is_linking_branch;
-logic [31:0]execute_pred_next_pc;
+logic [31:0] execute_pred_next_pc;
 logic [ 4:0] execute_rd;
+e_rf_write_source execute_rf_write_source;
 
 Execute execute(
     .clk(clk),
@@ -126,6 +129,7 @@ Execute execute(
     .decode_is_linking_branch(decode_is_linking_branch),
     .decode_pred_next_pc(decode_pred_next_pc),
     .decode_rd(decode_rd),
+    .decode_rf_write_source(decode_rf_write_source),
    
     // To/From RegFile 
     .rf_reg1(rf_read_reg1),
@@ -140,7 +144,8 @@ Execute execute(
     .wb_alu_out(execute_alu_out),
     .wb_is_linking_branch(execute_is_linking_branch),
     .wb_pred_next_pc(execute_pred_next_pc),
-    .wb_rd(execute_rd)
+    .wb_rd(execute_rd),
+    .wb_rf_write_source(execute_rf_write_source)
 );
 
 /******************************************/
@@ -166,6 +171,7 @@ WriteBack writeback(
     .execute_is_linking_branch(execute_is_linking_branch),
     .execute_pred_next_pc(execute_pred_next_pc),
     .execute_rd(execute_rd),
+    .execute_rf_write_source(execute_rf_write_source),
 
     // To Fetch
     .fetch_branch_update_valid(wb_branch_update_valid),

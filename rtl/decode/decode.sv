@@ -167,8 +167,11 @@ always_comb begin
                     3'b101: // SRLI, SRAI
                         begin
                             execute_inst_type = INST_REG_IMM;
-                            execute_alu_function = inst_flop[30] ?
-                                    ALU_SRA : ALU_SRL; // TODO: check this
+                            // TODO: check this
+                            if (inst_flop[30])
+                                execute_alu_function = ALU_SRA;
+                            else
+                                execute_alu_function = ALU_SRL;
                             execute_cmp_function = CMP_DISABLE;
                             execute_rf_write_source = SOURCE_ALU;
                         end
