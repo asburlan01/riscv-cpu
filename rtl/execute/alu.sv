@@ -26,7 +26,9 @@ always_comb begin
         ALU_SLL: res = op1 <<  op2[4:0];
         ALU_SRL: res = op1 >>  op2[4:0];
         ALU_SRA: res = op1 >>> op2[4:0];
-        ALU_DISABLE: res = 32'd0;
+
+        // ALU_DISABLE
+        default: res = 32'd0;
      endcase
 end
 
